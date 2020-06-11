@@ -49,7 +49,7 @@ io.on('connection', socket => {
         allSchedules.forEach(schedule => {
             if (schedule.city == city) {
                 var start = new Date(schedule.start.seconds * 1000);
-                if (date.getDate() + 1 === start.getDate() && date.getMonth() === start.getMonth()) {
+                if (date.getDate() + 1 === start.getDate() + 1 && date.getMonth() === start.getMonth()) {
                     list.push(start.getHours().toString().padStart(2, '0') + ':' + start.getMinutes().toString().padStart(2, '0'));
                 }
             }
