@@ -1,17 +1,21 @@
 require('dotenv/config');
 const server = require('http').createServer();
-const io = require('socket.io')(server, {
-    origins: process.env.ORIGIN_URL,
-});
+const io = require('socket.io')(server, { origins: process.env.ORIGINS });
 const firebase = require('./src/firebase');
 const spredsheet = require('./src/spreadsheet');
 const moment = require('moment');
 
 moment.locale('pt-br');
-
 var allSchedules = [];
-
 var emitSchedules = () => { };
+
+const listTimes = ["07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+"12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
+"17:00", "17:30", "18:00"]
+const listTimesSat = [
+    "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+    "12:00"
+]
 
 firebase.firestore().collection('scheduling').onSnapshot(querySnapshot => {
     var schedules = [];
@@ -28,9 +32,9 @@ const emitCalendar = () => {
     var date = new Date();
     for (; list.length < 15;) {
         date = new Date(date.setTime(date.getTime() + 1 * 86400000));
-        if (date.getDay() !== 1 && date.getDay() !== 6){
+        if (date.getDay() !== 0){
             list.push({
-                "label": moment(date).format('LL').toString(),
+                "label": moment(date).format('ll').toString(),
                 "value": `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${(date.getDate()).toString().padStart(2, '0')}`
             });
         }
@@ -61,19 +65,22 @@ const createSchedule = (data, callback) => {
     } else callback('Visita não agendada, horário não disponível');
 }
 
-const emitListInvalidTimes = (data, callback) => {
+const emitScheduleList = (data, callback) => {
     var [date, city] = data;
     date = new Date(date);
     var list = [];
 
     allSchedules.filter(value => value.city === city).map(schedule => {
         var start = new Date(schedule.start.seconds * 1000);
-        if (date.getDate() === start.getDate() && date.getMonth() === start.getMonth()) {
+        if (date.getDate() + 1 === start.getDate() && date.getMonth() === start.getMonth()) {
             list.push(start.getHours().toString().padStart(2, '0') + ':' + start.getMinutes().toString().padStart(2, '0'));
         }
     });
 
-    callback(list);
+    callback(listTimes.map(element => {
+        if (list.includes(element)) return {label: element, value: element, visibility: false}
+        else return {label: element, value: element, visibility: true};
+    }));
 }
 
 io.on('connection', socket => {
@@ -92,8 +99,8 @@ io.on('connection', socket => {
 
     // [yyyy-mm-dd, city]
     socket.on('checkDate', data => {
-        emitListInvalidTimes(data, (list) => {
-            socket.emit('listInvalidTimes', list);
+        emitScheduleList(data, (list) => {
+            socket.emit('scheduleList', list);
         });
     });
 });
