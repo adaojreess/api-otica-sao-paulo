@@ -75,9 +75,15 @@ const emitScheduleList = (data, callback) => {
     });
     var newList = [];
 
-    listTimes.forEach(element => {
-        if (!list.includes(element)) newList.push(element);
-    });
+    if (date.getDay() !== 6) {
+        listTimes.forEach(element => {
+            if (!list.includes(element)) newList.push(element);
+        });
+    } else {
+        listTimesSat.forEach(element => {
+            if (!list.includes(element)) newList.push(element);
+        });
+    }
 
     callback(newList);
 }
