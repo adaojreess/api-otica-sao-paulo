@@ -33,10 +33,7 @@ const emitCalendar = () => {
     for (; list.length < 15;) {
         date = new Date(date.setTime(date.getTime() + 1 * 86400000));
         if (date.getDay() !== 0){
-            list.push({
-                "label": moment(date).format('ll').toString(),
-                "value": `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${(date.getDate()).toString().padStart(2, '0')}`
-            });
+            list.push(`${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${(date.getDate()).toString().padStart(2, '0')}`);
         }
     }
     return list;
@@ -76,11 +73,13 @@ const emitScheduleList = (data, callback) => {
             list.push(start.getHours().toString().padStart(2, '0') + ':' + start.getMinutes().toString().padStart(2, '0'));
         }
     });
+    var newList = [];
 
-    callback(listTimes.map(element => {
-        if (list.includes(element)) return {label: element, value: element, visibility: false}
-        else return {label: element, value: element, visibility: true};
-    }));
+    listTimes.forEach(element => {
+        if (!list.includes(element)) newList.push(element);
+    });
+
+    callback(newList);
 }
 
 io.on('connection', socket => {
