@@ -72,7 +72,7 @@ const emitScheduleList = (data, callback) => {
 
     allSchedules.filter(value => value.city === city).map(schedule => {
         var start = new Date(schedule.start.seconds * 1000);
-        if (date.getDate() + 1 === start.getDate() && date.getMonth() === start.getMonth()) {
+        if (date.getDate() === start.getDate() && date.getMonth() === start.getMonth()) {
             list.push(start.getHours().toString().padStart(2, '0') + ':' + start.getMinutes().toString().padStart(2, '0'));
         }
     });
