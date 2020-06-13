@@ -5,6 +5,9 @@ const io = require('socket.io')(server, {
 });
 const firebase = require('./src/firebase');
 const spredsheet = require('./src/spreadsheet');
+const moment = require('moment');
+
+moment.locale('pt-br');
 
 var allSchedules = [];
 
@@ -17,8 +20,6 @@ firebase.firestore().collection('scheduling').onSnapshot(querySnapshot => {
     });
     allSchedules = schedules;
 
-    console.log(schedules);
-
     emitSchedules();
 });
 
@@ -27,7 +28,12 @@ const emitCalendar = () => {
     var date = new Date();
     for (; list.length < 15;) {
         date = new Date(date.setTime(date.getTime() + 1 * 86400000));
-        if (date.getDay() !== 0 && date.getDay() !== 6) list.push(date);
+        if (date.getDay() !== 1 && date.getDay() !== 6){
+            list.push({
+                "label": moment(date).format('LL').toString(),
+                "value": `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${(date.getDate()).toString().padStart(2, '0')}`
+            });
+        }
     }
     return list;
 }
