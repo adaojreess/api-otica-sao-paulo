@@ -1,7 +1,7 @@
 require('dotenv/config');
 const server = require('http').createServer();
 const io = require('socket.io')(server, {
-    origins: process.env.ORIGIN,
+    origins: process.env.ORIGIN_URL,
 });
 const firebase = require('./src/firebase');
 const spredsheet = require('./src/spreadsheet');
