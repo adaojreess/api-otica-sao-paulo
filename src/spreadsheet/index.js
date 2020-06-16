@@ -1,3 +1,4 @@
+require('dotenv/config');
 const GoogleSpreadsheet = require('google-spreadsheet');
 const { promisify } = require('util');
 const creds = require('../../client_secret');
@@ -7,7 +8,7 @@ const addScheduleToSheet = async (data) => {
     moment.locale('pt-br');
 
     const sheetIndex = data.city === "Piripiri" ? 0 : 1;
-    const doc = new GoogleSpreadsheet('1v6s0VWlANH2PtjSuX_g9uZebqwZDHlNuVqrnVOATNY0');
+    const doc = new GoogleSpreadsheet(process.env.SPREADSHEET_ID);
     await promisify(doc.useServiceAccountAuth)(creds);
     const info = await promisify(doc.getInfo)();
     const sheet = info.worksheets[sheetIndex];
@@ -16,12 +17,11 @@ const addScheduleToSheet = async (data) => {
 
 
     data = {
-        Nome: data.name,
-        Horario: data.start,
-        CPF: data.cpf,
-        Email: data.email,
-        Telefone: data.phone,
-        Cidade: data.city
+        "Nome": data.name,
+        "Horario": data.start,
+        "CPF": data.cpf,
+        "Telefone": data.phone,
+        "Cidade": data.city
     }
 
     await promisify(sheet.addRow)(data).then(() => {

@@ -39,7 +39,7 @@ app.use(routes.get('/calendar', (req, res) => {
     res.json({calendar: list});
 }));
 
-app.use(routes.get('/schedules', (req, res) => {
+app.use(routes.post('/schedules', (req, res) => {
     var {date, city} = req.body;
 
     date = new Date(date);
