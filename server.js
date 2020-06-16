@@ -71,6 +71,7 @@ app.use(routes.post('/schedule' , (req, res) => {
     
     var verify = true;
     data.start = new Date(data.start);
+    data.start = new Date(data.start.setTime(data.start.getTime() + (3*60*60*1000)));
     allSchedules.forEach(schedule => {
         var start = new Date(schedule.start.seconds * 1000);
         var checkDate = start.getDate() + start.getHours() + start.getMinutes() === data.start.getDate() + data.start.getHours() + data.start.getMinutes();
