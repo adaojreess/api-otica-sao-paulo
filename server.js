@@ -89,7 +89,12 @@ app.use(routes.post('/schedule' , (req, res) => {
 }));
 
 app.use('/', (req, res) => {
-    res.json({message: " API online"})
+    res.json({message: "API online"})
 });
+
+const cred = require('./client_secret');
+
+
+console.log(process.env.PRIVATE_KEY);
 
 app.listen(process.env.PORT || 3001);
