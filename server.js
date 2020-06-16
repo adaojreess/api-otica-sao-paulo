@@ -42,7 +42,7 @@ app.use(routes.get('/calendar', (req, res) => {
 app.use(routes.post('/schedules', (req, res) => {
     var {date, city} = req.body;
 
-    date = new Date(date);
+    date = new Date(date).setTime(this.getTime() + (3*60*60*1000));
     var list = [];
 
     allSchedules.filter(value => value.city === city).map(schedule => {
