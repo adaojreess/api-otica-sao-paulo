@@ -4,8 +4,10 @@ const { promisify } = require('util');
 const creds = require('../../client_secret');
 const moment = require('moment');
 
+moment.locale('pt-br');
+
 const addScheduleToSheet = async (data) => {
-    moment.locale('pt-br');
+
 
     const sheetIndex = data.city === "Piripiri" ? 0 : 1;
     const doc = new GoogleSpreadsheet(process.env.SPREADSHEET_ID);
@@ -33,7 +35,7 @@ const addScheduleToSheet = async (data) => {
 
 async function removeSchedule(data) {
     const sheetIndex = data.city === "Piripiri" ? 0 : 1;
-    const doc = new GoogleSpreadsheet('1v6s0VWlANH2PtjSuX_g9uZebqwZDHlNuVqrnVOATNY0');
+    const doc = new GoogleSpreadsheet(process.env.SPREADSHEET_ID);
     await promisify(doc.useServiceAccountAuth)(creds);
     const info = await promisify(doc.getInfo)();
     const sheet = info.worksheets[sheetIndex];
@@ -52,20 +54,22 @@ async function removeSchedule(data) {
 async function updateShedule(data) {
     const sheetIndex = data.city === "Piripiri" ? 0 : 1;
 
-    const doc = new GoogleSpreadsheet('1v6s0VWlANH2PtjSuX_g9uZebqwZDHlNuVqrnVOATNY0');
+    const doc = new GoogleSpreadsheet(process.env.SPREADSHEET_ID);
     await promisify(doc.useServiceAccountAuth)(creds);
     const info = await promisify(doc.getInfo)();
     const sheet = info.worksheets[sheetIndex];
 
     try {
-        const rows = await promisify(sheet.getRows)({
-            query: 'cpf = ' + data.cpf
-        });
+        const rows = await promisify(sheet.getRows)();
 
-        rows[0].name = data.name;
-        rows[0].start = data.start;
-        rows[0].email = data.email;
-        rows[0].phone = data.phone;
+        data.start = moment(data.start).format('LLL');
+
+        rows[0]["Nome"] = data.name;
+        rows[0]["Horario"] = data.start;
+        rows[0]["Telefone"] = data.phone;
+        rows[0]["Cidade"] = data.city;
+
+        console.log(rows[0]);
 
         rows[0].save();
         return "success";

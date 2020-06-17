@@ -5,7 +5,7 @@ const spredsheet = require('./spreadsheet');
 const { listTimes } = require('./consts');
 
 
-firebase.firestore().collection('scheduling').onSnapshot(querySnapshot => {
+firebase.firestore().collection('schedules').onSnapshot(querySnapshot => {
     var schedules = [];
     querySnapshot.forEach(function (doc) {
         schedules.push(doc.data());
@@ -53,7 +53,7 @@ routes.post('/schedule', (req, res) => {
     if (verify) {
         try {
             firebase.firestore()
-                .collection('scheduling')
+                .collection('schedules')
                 .doc(data.cpf)
                 .set(data).then(() => {
                     spredsheet.addScheduleToSheet(data).then(result => res.json({ message: "success" }));
@@ -74,6 +74,19 @@ routes.get('/calendar', (req, res) => {
     }
     res.json({ calendar: list });
 
+});
+
+routes.put('/schedule', (req, res) => {
+    var data = req.body;
+    data.start = new Date(data.start);
+    try {
+        firebase.firestore()
+            .collection('schedules')
+            .doc(data.cpf)
+            .set(data).then(() => {
+                spredsheet.updateShedule(data).then(result => res.json({ message: "success" }));
+            });
+    } catch (e) { res.json({ message: "error" }) };
 });
 
 module.exports = routes;
