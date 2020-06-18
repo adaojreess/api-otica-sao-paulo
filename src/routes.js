@@ -89,4 +89,21 @@ routes.put('/schedule', (req, res) => {
     } catch (e) { res.json({ message: "error" }) };
 });
 
+routes.get('/schedules/today', (req, res) => {
+    const date = new Date();
+    const city = req.headers.city;
+
+    const schedules = allSchedules.filter(schedule => schedule.city === city).filter(schedule => {
+        var start = new Date(schedule.start.seconds * 1000);
+        return (start.getDate() === date.getDate() && start.getMonth() === date.getMonth());
+    }).map(schedule => {
+        var start = new Date(schedule.start.seconds * 1000);
+        return start.getHours().toString().padStart(2, '0') + ':' + start.getMinutes().toString().padStart(2, '0');
+    });
+
+    const todaySchedules = listTimes.filter(item => !schedules.includes(item));
+
+    res.json({ today_schedules: todaySchedules});
+});
+
 module.exports = routes;
