@@ -32,7 +32,7 @@ routes.post('/schedules', (req, res) => {
             if (!list.includes(element)) newList.push(element);
         });
     } else {
-        listTimes.slice(0, 10).forEach(element => {
+        listTimes.slice(2, 10).forEach(element => {
             if (!list.includes(element)) newList.push(element);
         });
     }
