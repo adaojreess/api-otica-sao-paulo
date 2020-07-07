@@ -60,7 +60,9 @@ async function updateShedule(data) {
     const sheet = info.worksheets[sheetIndex];
 
     try {
-        const rows = await promisify(sheet.getRows)();
+        const rows = await promisify(sheet.getRows)({
+            query: 'cpf = ' + data.cpf
+        });
 
         data.start = moment(data.start).format('LLL');
 
@@ -69,7 +71,6 @@ async function updateShedule(data) {
         rows[0]["Telefone"] = data.phone;
         rows[0]["Cidade"] = data.city;
 
-        console.log(rows[0]);
 
         rows[0].save();
         return "success";

@@ -14,8 +14,36 @@ firebase.firestore().collection('schedules').onSnapshot(querySnapshot => {
 });
 
 
-routes.get('/admin/schedules', (req, res, next) => {
+routes.get('/admin/schedules', (req, res) => {
     res.json(allSchedules);
+});
+
+routes.put('/admin/schedule', (req, res) => {
+    var data = req.body;
+    data.start = new Date(data.start);
+    try {
+        firebase.firestore()
+            .collection('schedules')
+            .doc(data.cpf)
+            .set(data).then(() => {
+                spredsheet.updateShedule(data).then(result => res.json({ message: "success" }));
+            });
+    } catch (e) { res.json({ message: "error" }) };
+});
+
+routes.delete('/admin/schedule', (req, res) => {
+    const data = req.body;
+
+    try {
+        firebase.firestore()
+            .collection('schedules')
+            .doc(data.cpf)
+            .delete().then(async () => {
+                spredsheet.removeSchedule(data).then((message) => {
+                    res.json({ message });
+                });
+            });
+    } catch (e) { res.json({ message: "error" }) };
 });
 
 routes.post('/schedules', (req, res) => {
@@ -79,19 +107,6 @@ routes.get('/calendar', (req, res) => {
     }
     res.json({ calendar: list });
 
-});
-
-routes.put('/schedule', (req, res) => {
-    var data = req.body;
-    data.start = new Date(data.start);
-    try {
-        firebase.firestore()
-            .collection('schedules')
-            .doc(data.cpf)
-            .set(data).then(() => {
-                spredsheet.updateShedule(data).then(result => res.json({ message: "success" }));
-            });
-    } catch (e) { res.json({ message: "error" }) };
 });
 
 routes.get('/schedules/today', (req, res) => {
