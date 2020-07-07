@@ -13,6 +13,11 @@ firebase.firestore().collection('schedules').onSnapshot(querySnapshot => {
     allSchedules = schedules;
 });
 
+
+routes.get('/admin/schedules', (req, res, next) => {
+    res.json(allSchedules);
+});
+
 routes.post('/schedules', (req, res) => {
     var { date, city } = req.body;
 
@@ -103,7 +108,7 @@ routes.get('/schedules/today', (req, res) => {
 
     const todaySchedules = listTimes.filter(item => !schedules.includes(item));
 
-    res.json({ today_schedules: todaySchedules});
+    res.json({ today_schedules: todaySchedules });
 });
 
 module.exports = routes;
