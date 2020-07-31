@@ -5,10 +5,19 @@ const spredsheet = require('./spreadsheet');
 const { listTimes } = require('./consts');
 const moment = require('moment');
 
+const removeDocument = async (docId) => {
+    await firebase.firestore()
+        .collection('schedules')
+        .doc(docId)
+        .delete();
+}
+
 firebase.firestore().collection('schedules').onSnapshot(querySnapshot => {
     var schedules = [];
     querySnapshot.forEach(function (doc) {
-        schedules.push(doc.data());
+        if (new Date(doc.data()['start']['seconds'] * 1000).getTime() < new Date().getTime()) removeDocument(doc.id);
+        else
+            schedules.push(doc.data());
     });
     allSchedules = schedules;
 });
@@ -18,7 +27,7 @@ routes.get('/admin/schedules', (req, res) => {
     var schedules = allSchedules.filter(appointments =>
         new Date(appointments.start.seconds * 1000).getTime() > new Date().getTime()
     );
-    allSchedules.forEach(data =>{ data['date'] = moment(data.start.seconds*1000) });
+    schedules.forEach(data => { data['date'] = moment(data.start.seconds * 1000) });
     res.json(schedules);
 });
 
