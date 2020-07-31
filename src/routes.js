@@ -15,8 +15,11 @@ firebase.firestore().collection('schedules').onSnapshot(querySnapshot => {
 
 
 routes.get('/admin/schedules', (req, res) => {
+    var schedules = allSchedules.filter(appointments =>
+        new Date(appointments.start.seconds * 1000).getTime() > new Date().getTime()
+    );
     allSchedules.forEach(data =>{ data['date'] = moment(data.start.seconds*1000) });
-    res.json(allSchedules);
+    res.json(schedules);
 });
 
 routes.put('/admin/schedule', (req, res) => {
