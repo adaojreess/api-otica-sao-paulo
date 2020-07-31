@@ -3,7 +3,7 @@ const firebase = require('./firebase');
 const routes = express.Router();
 const spredsheet = require('./spreadsheet');
 const { listTimes } = require('./consts');
-
+const moment = require('moment');
 
 firebase.firestore().collection('schedules').onSnapshot(querySnapshot => {
     var schedules = [];
@@ -15,6 +15,7 @@ firebase.firestore().collection('schedules').onSnapshot(querySnapshot => {
 
 
 routes.get('/admin/schedules', (req, res) => {
+    allSchedules.forEach(data =>{ data['date'] = moment(data.start.seconds*1000) });
     res.json(allSchedules);
 });
 
