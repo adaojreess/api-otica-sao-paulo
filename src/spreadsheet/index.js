@@ -51,7 +51,7 @@ async function removeSchedule(data) {
     }
 }
 
-async function updateShedule(data) {
+async function updateSchedule(data) {
     const sheetIndex = data.city === "Piripiri" ? 0 : 1;
 
     const doc = new GoogleSpreadsheet(process.env.SPREADSHEET_ID);
@@ -82,5 +82,5 @@ async function updateShedule(data) {
 module.exports = {
     addScheduleToSheet,
     removeSchedule,
-    updateShedule
+    updateSchedule
 };
