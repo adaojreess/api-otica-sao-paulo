@@ -96,12 +96,12 @@ routes.get('/admin/appointments', (req, res) => {
 
 routes.put('/admin/appointment', async (req, res) => {
     let data = req.body;
-    let id = req.query.id;
+    let id = Number(req.query.id);
 
     try {
         if (data.statement === 'blocked') {
             if (id.toString().length === 13)
-                await firebase.firestore().collection('schedules').doc(id).set({
+                await firebase.firestore().collection('schedules').doc(id.toString()).set({
                     "start": moment.unix(id / 1000).toDate(),
                     "id": id,
                     ...data
@@ -109,7 +109,7 @@ routes.put('/admin/appointment', async (req, res) => {
         } else {
             data['id'] = id;
             data['start'] = moment.unix(id / 1000).toDate();
-            await firebase.firestore().collection('schedules').doc(id).set(data);
+            await firebase.firestore().collection('schedules').doc(id.toString()).set(data);
             await spreadsheet.updateSchedule(data);
         }
     } catch (e) {
@@ -153,7 +153,6 @@ const generateAppointmentsWithId = (city, date) => {
                 // data.date = moment.unix(date.seconds).utc();
             }
         });
-
 
         if (data !== undefined) { 
             data.id = date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf();
