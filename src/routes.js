@@ -32,7 +32,7 @@ routes.post('/appointment', async (req, res) => {
                 await firebase.firestore()
                     .collection('schedules')
                     .doc(date.valueOf().toString())
-                    .set({statement: "active", ...data});
+                    .set({ statement: "active", ...data });
                 await spreadsheet.addScheduleToSheet(data);
             } catch (e) { res.json({ message: "error" }) };
         } else return res.json({ message: "impossible appointment" })
@@ -154,11 +154,15 @@ const generateAppointmentsWithId = (city, date) => {
             }
         });
 
-        if (data !== undefined) appointments.push({ "id": date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf(), ...data });
+
+        if (data !== undefined) { 
+            data.id = date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf();
+            appointments.push(data);
+         }
         else appointments.push({ "id": date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf(), "statement": "empty", });
     });
 
-    return appointments;
+return appointments;
 }
 
 const isDayAvailable = (date, city) => {
