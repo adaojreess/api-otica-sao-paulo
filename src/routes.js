@@ -67,7 +67,7 @@ routes.post('/appointment', async (req, res) => {
         } else return res.json({ message: "impossible " + message })
     } catch (e) {
         res.statusCode = 500;
-        return res.json({ "message": "error" });
+        return res.json({ "message": "error", "error": e });
     }
     return res.json({ "message": "success" });
 });
