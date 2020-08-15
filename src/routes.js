@@ -4,39 +4,69 @@ const routes = express.Router();
 const spreadsheet = require('./spreadsheet');
 const { listTimes } = require('./consts');
 const moment = require('moment');
+let appointmentListPiripiri = [];
+let appointmentListPedroII = [];
 
-firebase.firestore().collection('schedules').onSnapshot(querySnapshot => {
-    var schedule = [];
-    querySnapshot.forEach(async function (doc) {
-        if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf()) await removeDocument(doc.id);
-        else schedule.push(doc.data());
+firebase.firestore().collection('cities')
+    .doc('Piripiri')
+    .collection('schedules')
+    .onSnapshot(querySnapshot => {
+        var schedule = [];
+        querySnapshot.forEach(async function (doc) {
+            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf()) await removeDocument(doc.id);
+            else schedule.push(doc.data());
+        });
+        appointmentListPiripiri = schedule;
     });
-    schedules = schedule;
-});
+
+firebase.firestore().collection('cities')
+    .doc('Pedro II')
+    .collection('schedules')
+    .onSnapshot(querySnapshot => {
+        var schedule = [];
+        querySnapshot.forEach(async function (doc) {
+            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf()) await removeDocument(doc.id);
+            else schedule.push(doc.data());
+        });
+        appointmentListPedroII = schedule;
+    });
 
 routes.post('/appointment', async (req, res) => {
     var data = req.body;
     var verify = true;
-    date = moment(data.start);
+    let date = moment(data.start);
     data.start = new Date(data.start);
 
+    var message = 'schedule';
 
     try {
-        schedules.forEach(appointment => {
-            var start = moment.unix(appointment.start.seconds);
-            var checkDate = start.valueOf() === date.valueOf();
-            if ((appointment.city === data.city && appointment.cpf === data.cpf && appointment.statement === "blocked" && verify) || checkDate) verify = false;
-        });
+        if (data.city === "Piripiri") {
+            appointmentListPiripiri.forEach(appointment => {
+                var start = moment.unix(appointment.start.seconds);
+                var checkDate = start.valueOf() === date.valueOf();
+                if ((appointment.cpf === data.cpf || appointment.statement === "blocked" || checkDate) && verify) verify = false;
+            });
+        } else {
+            appointmentListPedroII.forEach(appointment => {
+                var start = moment.unix(appointment.start.seconds);
+                var checkDate = start.valueOf() === date.valueOf();
+                if ((appointment.cpf === data.cpf || appointment.statement === "blocked" || checkDate) && verify) verify = false;
+                if (appointment.cpf === data.cpf) message = "CPF";
+            });
+        }
+
         if (verify) {
-            try {
-                await firebase.firestore()
-                    .collection('schedules')
-                    .doc(date.valueOf().toString())
-                    .set({ statement: "active", ...data });
-                await spreadsheet.addScheduleToSheet(data);
-            } catch (e) { res.json({ message: "error" }) };
-        } else return res.json({ message: "impossible appointment" })
+            await firebase.firestore()
+                .collection('cities')
+                .doc(data.city)
+                .collection('schedules')
+                .doc(date.valueOf().toString())
+                .set({ statement: "active", ...data, id: date.valueOf().toString() });
+            await spreadsheet.addScheduleToSheet(data);
+
+        } else return res.json({ message: "impossible " + message })
     } catch (e) {
+        res.statusCode = 500;
         return res.json({ "message": "error" });
     }
     return res.json({ "message": "success" });
@@ -64,12 +94,23 @@ routes.get('/calendar', (req, res) => {
 
         res.json({ calendar: list });
     } else {
-        schedules.filter(value => value.city === city).map(schedule => {
-            var start = moment.unix(schedule.start.seconds).utc();
-            if (date.date() === start.date() && date.month() === start.month()) {
-                list.push(start.hour().toString().padStart(2, '0') + ':' + start.minutes().toString().padStart(2, '0'));
-            }
-        });
+        if (city === "Piripiri") {
+            appointmentListPiripiri.filter(value => value.city === city).forEach(schedule => {
+                var start = moment.unix(schedule.start.seconds).utc();
+                if (date.date() === start.date() && date.month() === start.month()) {
+                    list.push(start.hour().toString().padStart(2, '0') + ':' + start.minutes().toString().padStart(2, '0'));
+                }
+            });
+        }
+        else {
+            appointmentListPedroII.filter(value => value.city === city).map(schedule => {
+                var start = moment.unix(schedule.start.seconds).utc();
+                if (date.date() === start.date() && date.month() === start.month()) {
+                    list.push(start.hour().toString().padStart(2, '0') + ':' + start.minutes().toString().padStart(2, '0'));
+                }
+            });
+        }
+
         var newList = [];
 
         if (date.date() !== 6) {
@@ -101,15 +142,20 @@ routes.put('/admin/appointment', async (req, res) => {
     try {
         if (data.statement === 'blocked') {
             if (id.toString().length === 13)
-                await firebase.firestore().collection('schedules').doc(id.toString()).set({
-                    "start": moment.unix(id / 1000).toDate(),
-                    "id": id,
-                    ...data
-                });
+                await firebase.firestore()
+                    .collection('cities')
+                    .doc('data.city')
+                    .collection('schedules')
+                    .doc(id.toString())
+                    .set({
+                        "start": moment.unix(id / 1000).toDate(),
+                        "id": id,
+                        ...data
+                    });
         } else {
             data['id'] = id;
             data['start'] = moment.unix(id / 1000).toDate();
-            await firebase.firestore().collection('schedules').doc(id.toString()).set(data);
+            await firebase.firestore().collection('schedules').doc(id.toString()).update(data);
             await spreadsheet.updateSchedule(data);
         }
     } catch (e) {
@@ -125,10 +171,19 @@ routes.delete('/admin/appointment', async (req, res) => {
 
     try {
         await firebase.firestore().collection('schedules').doc(id).delete();
-        await spreadsheet.removeSchedule(data);
-    } catch (e) { res.json({ message: "error" }) };
+        await spreadsheet.removeSchedule(data); error
+    } catch (e) {
+        res.statusCode = 500;
+        res.json({ message: "error" });
+    }
 
     res.json({ "message": "success" });
+});
+
+
+routes.get('/search', (req, res) => {
+    const cpf = req.query.cpf;
+    res.json({ data: searchWithCpf(cpf) });
 });
 
 const removeDocument = async (docId) => {
@@ -145,34 +200,68 @@ const generateAppointmentsWithId = (city, date) => {
         let dateValueOf = date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf();
         let data;
 
-        schedules.forEach(schedules => {
-            if (city === schedules.city && verify === false
-                && (moment.unix(schedules.start.seconds).utc().valueOf() === dateValueOf)) {
-                verify = true;
-                data = schedules;
-                // data.date = moment.unix(date.seconds).utc();
-            }
-        });
+        if (city === "Piripiri") {
+            appointmentListPiripiri.forEach(schedule => {
+                if (city === schedule.city && verify === false
+                    && (moment.unix(schedule.start.seconds).utc().valueOf() === dateValueOf)) {
+                    verify = true;
+                    data = schedule;
+                }
+            });
+        } else {
+            appointmentListPedroII.forEach(schedule => {
+                if (city === schedule.city && verify === false
+                    && (moment.unix(schedule.start.seconds).utc().valueOf() === dateValueOf)) {
+                    verify = true;
+                    data = schedule;
+                }
+            });
+        }
 
-        if (data !== undefined) { 
+        if (data !== undefined) {
+            console.log(data);
             data.id = date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf();
             appointments.push(data);
-         }
-        else appointments.push({ "id": date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf(), "statement": "empty", });
+        }
+        else appointments.push(
+            {
+                "id": city === "Piripiri"
+                    ? date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf()
+                    : date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf() + 1,
+                "statement": "empty",
+            });
     });
 
-return appointments;
+    return appointments;
 }
 
 const isDayAvailable = (date, city) => {
-    let count = schedules.filter(element => {
-        var start = moment.unix(element['start']['seconds']);
-        if (element['city'] === city && start.date() === date.date() && start.month() === date.month()) {
-            return true
-        }
-        return false;
-    }).length;
+    var count = 15;
+    if (city === "Piripiri") {
+        count = appointmentListPiripiri.filter(element => {
+            var start = moment.unix(element['start']['seconds']);
+            if (element['city'] === city && start.date() === date.date() && start.month() === date.month()) {
+                return true
+            }
+            return false;
+        }).length;
+    } else {
+        count = appointmentListPedroII.filter(element => {
+            var start = moment.unix(element['start']['seconds']);
+            if (element['city'] === city && start.date() === date.date() && start.month() === date.month()) {
+                return true
+            }
+            return false;
+        }).length;
+    }
     return count !== 15;
+}
+
+const searchWithCpf = (cpf) => {
+    appointmentFromPiripiri = appointmentListPiripiri.find(element => element.cpf === cpf);
+    appointmentFromPedroII = appointmentListPedroII.find(element => element.cpf === cpf);
+
+    return { ...appointmentFromPiripiri, ...appointmentFromPedroII };
 }
 
 module.exports = routes;
