@@ -155,12 +155,12 @@ routes.put('/admin/appointment', async (req, res) => {
         } else {
             data['id'] = id;
             data['start'] = moment.unix(id / 1000).toDate();
-            await firebase.firestore().collection('schedules').doc(id.toString()).update(data);
+            await firebase.firestore().collection('cities').doc(data.city).collection('schedules').doc(id.toString()).update(data);
             await spreadsheet.updateSchedule(data);
         }
     } catch (e) {
         res.statusCode = 500;
-        res.json({ "message": "error" });
+        res.json({ "message": "error", "error": e });
     }
     res.json({ "message": "success" });
 });
@@ -180,10 +180,15 @@ routes.delete('/admin/appointment', async (req, res) => {
     res.json({ "message": "success" });
 });
 
-
 routes.get('/search', (req, res) => {
     const cpf = req.query.cpf;
-    res.json({ data: searchWithCpf(cpf) });
+    const city = req.query.city;
+    const id = req.query.id;
+    if (city !== undefined && id !== undefined) {
+        res.json({ data: searchById(Number(id), city === "Piripiri" ? appointmentListPiripiri : appointmentListPedroII) });
+    } else {
+        res.json({ data: searchByCpf(cpf) });
+    }
 });
 
 const removeDocument = async (docId) => {
@@ -257,11 +262,16 @@ const isDayAvailable = (date, city) => {
     return count !== 15;
 }
 
-const searchWithCpf = (cpf) => {
+const searchByCpf = (cpf) => {
     appointmentFromPiripiri = appointmentListPiripiri.find(element => element.cpf === cpf);
     appointmentFromPedroII = appointmentListPedroII.find(element => element.cpf === cpf);
 
     return { ...appointmentFromPiripiri, ...appointmentFromPedroII };
+}
+
+const searchById = (id, list) => {
+    let appointment = list.find(element => element.id === id);
+    return appointment;
 }
 
 module.exports = routes;
