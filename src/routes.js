@@ -230,9 +230,7 @@ const generateAppointmentsWithId = (city, date) => {
         }
         else appointments.push(
             {
-                "id": city === "Piripiri"
-                    ? date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf()
-                    : date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf() + 1,
+                "id": date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf(),
                 "statement": "empty",
             });
     });
