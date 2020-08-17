@@ -12,7 +12,7 @@ firebase.firestore().collection('cities')
     .collection('schedules')
     .onSnapshot(querySnapshot => {
         var schedule = [];
-        querySnapshot.forEach(async function (doc) {
+        querySnapshot.forEach(async function(doc) {
             if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf()) await removeDocument(doc.id);
             else schedule.push(doc.data());
         });
@@ -24,14 +24,14 @@ firebase.firestore().collection('cities')
     .collection('schedules')
     .onSnapshot(querySnapshot => {
         var schedule = [];
-        querySnapshot.forEach(async function (doc) {
+        querySnapshot.forEach(async function(doc) {
             if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf()) await removeDocument(doc.id);
             else schedule.push(doc.data());
         });
         appointmentListPedroII = schedule;
     });
 
-routes.post('/appointment', async (req, res) => {
+routes.post('/appointment', async(req, res) => {
     var data = req.body;
     var verify = true;
     let date = moment(data.start);
@@ -101,8 +101,7 @@ routes.get('/calendar', (req, res) => {
                     list.push(start.hour().toString().padStart(2, '0') + ':' + start.minutes().toString().padStart(2, '0'));
                 }
             });
-        }
-        else {
+        } else {
             appointmentListPedroII.filter(value => value.city === city).map(schedule => {
                 var start = moment.unix(schedule.start.seconds).utc();
                 if (date.date() === start.date() && date.month() === start.month()) {
@@ -135,7 +134,7 @@ routes.get('/admin/appointments', (req, res) => {
     res.send(list);
 });
 
-routes.put('/admin/appointment', async (req, res) => {
+routes.put('/admin/appointment', async(req, res) => {
     let data = req.body;
     let id = Number(req.query.id);
 
@@ -143,15 +142,15 @@ routes.put('/admin/appointment', async (req, res) => {
         if (data.statement === 'blocked') {
             if (id.toString().length === 13)
                 await firebase.firestore()
-                    .collection('cities')
-                    .doc('data.city')
-                    .collection('schedules')
-                    .doc(id.toString())
-                    .set({
-                        "start": moment.unix(id / 1000).toDate(),
-                        "id": id,
-                        ...data
-                    });
+                .collection('cities')
+                .doc(data.city)
+                .collection('schedules')
+                .doc(id.toString())
+                .set({
+                    "start": moment.unix(id / 1000).toDate(),
+                    "id": id,
+                    ...data
+                });
         } else {
             data['id'] = id;
             data['start'] = moment.unix(id / 1000).toDate();
@@ -165,13 +164,14 @@ routes.put('/admin/appointment', async (req, res) => {
     res.json({ "message": "success" });
 });
 
-routes.delete('/admin/appointment', async (req, res) => {
+routes.delete('/admin/appointment', async(req, res) => {
     const data = req.body;
     let id = req.query.id;
 
     try {
         await firebase.firestore().collection('schedules').doc(id).delete();
-        await spreadsheet.removeSchedule(data); error
+        await spreadsheet.removeSchedule(data);
+        error
     } catch (e) {
         res.statusCode = 500;
         res.json({ message: "error" });
@@ -191,7 +191,7 @@ routes.get('/search', (req, res) => {
     }
 });
 
-const removeDocument = async (docId) => {
+const removeDocument = async(docId) => {
     await firebase.firestore()
         .collection('schedules')
         .doc(docId)
@@ -207,16 +207,16 @@ const generateAppointmentsWithId = (city, date) => {
 
         if (city === "Piripiri") {
             appointmentListPiripiri.forEach(schedule => {
-                if (city === schedule.city && verify === false
-                    && (moment.unix(schedule.start.seconds).utc().valueOf() === dateValueOf)) {
+                if (city === schedule.city && verify === false &&
+                    (moment.unix(schedule.start.seconds).utc().valueOf() === dateValueOf)) {
                     verify = true;
                     data = schedule;
                 }
             });
         } else {
             appointmentListPedroII.forEach(schedule => {
-                if (city === schedule.city && verify === false
-                    && (moment.unix(schedule.start.seconds).utc().valueOf() === dateValueOf)) {
+                if (city === schedule.city && verify === false &&
+                    (moment.unix(schedule.start.seconds).utc().valueOf() === dateValueOf)) {
                     verify = true;
                     data = schedule;
                 }
@@ -227,14 +227,10 @@ const generateAppointmentsWithId = (city, date) => {
             console.log(data);
             data.id = date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf();
             appointments.push(data);
-        }
-        else appointments.push(
-            {
-                "id": city === "Piripiri"
-                    ? date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf()
-                    : date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf() + 1,
-                "statement": "empty",
-            });
+        } else appointments.push({
+            "id": date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf(),
+            "statement": "empty",
+        });
     });
 
     return appointments;
@@ -266,7 +262,7 @@ const searchByCpf = (cpf) => {
     appointmentFromPiripiri = appointmentListPiripiri.find(element => element.cpf === cpf);
     appointmentFromPedroII = appointmentListPedroII.find(element => element.cpf === cpf);
 
-    return { ...appointmentFromPiripiri, ...appointmentFromPedroII };
+    return {...appointmentFromPiripiri, ...appointmentFromPedroII };
 }
 
 const searchById = (id, list) => {
