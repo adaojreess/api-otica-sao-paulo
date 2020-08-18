@@ -13,7 +13,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(async function(doc) {
-            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf()) await removeDocument(doc.id);
+            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id);
             else schedule.push(doc.data());
         });
         appointmentListPiripiri = schedule;
@@ -25,7 +25,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(async function(doc) {
-            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf()) await removeDocument(doc.id);
+            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id);
             else schedule.push(doc.data());
         });
         appointmentListPedroII = schedule;
@@ -64,7 +64,10 @@ routes.post('/appointment', async(req, res) => {
                 .set({ statement: "active", ...data, id: date.valueOf().toString() });
             await spreadsheet.addScheduleToSheet(data);
 
-        } else return res.json({ message: "impossible " + message })
+        } else {
+            res.statusCode = 500;
+            return res.json({ message: "impossible " + message });
+        }
     } catch (e) {
         res.statusCode = 500;
         return res.json({ "message": "error", "error": e });
