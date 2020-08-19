@@ -13,7 +13,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(async function(doc) {
-            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id);
+            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Piripiri');
             else schedule.push(doc.data());
         });
         appointmentListPiripiri = schedule;
@@ -25,7 +25,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(async function(doc) {
-            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id);
+            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Pedro II');
             else schedule.push(doc.data());
         });
         appointmentListPedroII = schedule;
@@ -194,48 +194,54 @@ routes.get('/search', (req, res) => {
     }
 });
 
-const removeDocument = async(docId) => {
-    await firebase.firestore()
-        .collection('schedules')
-        .doc(docId)
-        .delete();
+const removeDocument = async(docId, city) => {
+    try {
+        await firebase.firestore()
+            .collection('cities')
+            .doc(city)
+            .collection('schedules')
+            .doc(docId)
+            .delete();
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 const generateAppointmentsWithId = (city, date) => {
     var appointments = [];
-    listTimes.forEach(time => {
-        let verify = false;
-        let dateValueOf = date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf();
-        let data;
+    try {
+        listTimes.forEach(time => {
+            let verify = false;
+            let dateValueOf = date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf();
+            let data;
 
-        if (city === "Piripiri") {
-            appointmentListPiripiri.forEach(schedule => {
-                if (city === schedule.city && verify === false &&
-                    (moment.unix(schedule.start.seconds).utc().valueOf() === dateValueOf)) {
-                    verify = true;
-                    data = schedule;
-                }
-            });
-        } else {
-            appointmentListPedroII.forEach(schedule => {
-                if (city === schedule.city && verify === false &&
-                    (moment.unix(schedule.start.seconds).utc().valueOf() === dateValueOf)) {
-                    verify = true;
-                    data = schedule;
-                }
-            });
-        }
+            if (city === "Piripiri") {
+                appointmentListPiripiri.forEach(schedule => {
+                    if (city === schedule.city && verify === false &&
+                        (moment.unix(schedule.start.seconds).utc().valueOf() === dateValueOf)) {
+                        verify = true;
+                        data = schedule;
+                    }
+                });
+            } else {
+                appointmentListPedroII.forEach(schedule => {
+                    if (city === schedule.city && verify === false &&
+                        (moment.unix(schedule.start.seconds).utc().valueOf() === dateValueOf)) {
+                        verify = true;
+                        data = schedule;
+                    }
+                });
+            }
 
-        if (data !== undefined) {
-            console.log(data);
-            data.id = date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf();
-            appointments.push(data);
-        } else appointments.push({
-            "id": date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf(),
-            "statement": "empty",
+            if (data !== undefined) {
+                data.id = date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf();
+                appointments.push(data);
+            } else appointments.push({
+                "id": date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf(),
+                "statement": "empty",
+            });
         });
-    });
-
+    } catch (e) {}
     return appointments;
 }
 
