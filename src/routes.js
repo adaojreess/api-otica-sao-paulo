@@ -34,26 +34,31 @@ firebase.firestore().collection('cities')
 routes.post('/appointment', async(req, res) => {
     var data = req.body;
     var verify = true;
-    let date = moment(data.start);
+    let date = moment(data.start).utc();
     data.start = new Date(data.start);
 
     let id;
 
-    var message = 'horário';
+    var message = 'Horário indisponível';
 
     try {
         if (data.city === "Piripiri") {
             appointmentListPiripiri.forEach(appointment => {
                 var start = moment.unix(appointment.start.seconds);
                 var checkDate = start.valueOf() === date.valueOf();
-                if ((appointment.cpf === data.cpf || appointment.statement === "blocked" || checkDate) && verify) verify = false;
+                if ((appointment.cpf === data.cpf || checkDate) && verify) {
+                    verify = false;
+                    if (appointment.cpf === data.cpf) message = "CPF já cadastrado";
+                }
             });
         } else {
             appointmentListPedroII.forEach(appointment => {
                 var start = moment.unix(appointment.start.seconds);
                 var checkDate = start.valueOf() === date.valueOf();
-                if ((appointment.cpf === data.cpf || appointment.statement === "blocked" || checkDate) && verify) verify = false;
-                if (appointment.cpf === data.cpf) message = "CPF";
+                if ((appointment.statement === "blocked" || appointment.cpf === data.cpf || checkDate) && verify) {
+                    verify = false;
+                    if (appointment.cpf === data.cpf) message = "CPF já cadastrado";
+                }
             });
         }
 
@@ -69,7 +74,7 @@ routes.post('/appointment', async(req, res) => {
 
         } else {
             res.statusCode = 500;
-            return res.json({ message: "O " + message + " já existe" });
+            return res.json({ message: message });
         }
     } catch (e) {
         res.statusCode = 500;
@@ -175,6 +180,7 @@ routes.put('/admin/appointment', async(req, res) => {
                     ...data
                 });
         } else {
+            console.log();
             data['id'] = id;
             data['start'] = moment.unix(id / 1000).toDate();
             await firebase.firestore().collection('cities').doc(data.city).collection('schedules').doc(id.toString()).update(data);
