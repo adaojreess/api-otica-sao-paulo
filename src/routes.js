@@ -39,7 +39,7 @@ routes.post('/appointment', async(req, res) => {
 
     let id;
 
-    var message = 'schedule';
+    var message = 'horário';
 
     try {
         if (data.city === "Piripiri") {
@@ -69,14 +69,14 @@ routes.post('/appointment', async(req, res) => {
 
         } else {
             res.statusCode = 500;
-            return res.json({ message: "impossible " + message });
+            return res.json({ message: "O " + message + " já existe" });
         }
     } catch (e) {
         res.statusCode = 500;
-        return res.json({ "message": "error", "error": e });
+        return res.json({ "message": "Erro ao salvar dados", "error": e });
     }
     return res.json({
-        "message": "success",
+        "message": "Visita salva",
         id
     });
 });
@@ -168,9 +168,9 @@ routes.put('/admin/appointment', async(req, res) => {
         }
     } catch (e) {
         res.statusCode = 500;
-        res.json({ "message": "error", "error": e });
+        res.json({ "message": "Dados não atualizados", "error": e });
     }
-    res.json({ "message": "success" });
+    res.json({ "message": "Dados atualizados" });
 });
 
 routes.delete('/admin/appointment', async(req, res) => {
@@ -183,10 +183,10 @@ routes.delete('/admin/appointment', async(req, res) => {
         error
     } catch (e) {
         res.statusCode = 500;
-        res.json({ message: "error" });
+        res.json({ message: "Erro ao deletar" });
     }
 
-    res.json({ "message": "success" });
+    res.json({ "message": "Dados deletados" });
 });
 
 routes.get('/search', (req, res) => {
