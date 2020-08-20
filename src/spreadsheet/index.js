@@ -6,7 +6,7 @@ const moment = require('moment');
 
 moment.locale('pt-br');
 
-const addScheduleToSheet = async (data) => {
+const addScheduleToSheet = async(data) => {
 
 
     const sheetIndex = data.city === "Piripiri" ? 0 : 1;
@@ -23,7 +23,8 @@ const addScheduleToSheet = async (data) => {
         "Horario": data.start,
         "CPF": data.cpf,
         "Telefone": data.phone,
-        "Cidade": data.city
+        "Cidade": data.city,
+        "ID": data.id
     }
 
     await promisify(sheet.addRow)(data).then(() => {

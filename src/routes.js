@@ -65,7 +65,7 @@ routes.post('/appointment', async(req, res) => {
                 .collection('schedules')
                 .doc(id.toString())
                 .set({...data, id: id });
-            await spreadsheet.addScheduleToSheet(data);
+            await spreadsheet.addScheduleToSheet({...data, "id": id.toString() });
 
         } else {
             res.statusCode = 500;
@@ -174,13 +174,12 @@ routes.put('/admin/appointment', async(req, res) => {
 });
 
 routes.delete('/admin/appointment', async(req, res) => {
-    const data = req.body;
     let id = req.query.id;
+    let city = req.query.city;
 
     try {
-        await firebase.firestore().collection('schedules').doc(id).delete();
-        await spreadsheet.removeSchedule(data);
-        error
+        await firebase.firestore().collection('cities').doc(city).collection('schedules').doc(id).delete();
+        await spreadsheet.removeSchedule({ city, id });
     } catch (e) {
         res.statusCode = 500;
         res.json({ message: "Erro ao deletar" });
