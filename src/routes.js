@@ -37,6 +37,8 @@ routes.post('/appointment', async(req, res) => {
     let date = moment(data.start);
     data.start = new Date(data.start);
 
+    let id;
+
     var message = 'schedule';
 
     try {
@@ -56,12 +58,13 @@ routes.post('/appointment', async(req, res) => {
         }
 
         if (verify) {
+            id = date.valueOf();
             await firebase.firestore()
                 .collection('cities')
                 .doc(data.city)
                 .collection('schedules')
-                .doc(date.valueOf().toString())
-                .set({ statement: "active", ...data, id: date.valueOf().toString() });
+                .doc(id.toString())
+                .set({...data, id: id });
             await spreadsheet.addScheduleToSheet(data);
 
         } else {
@@ -72,7 +75,10 @@ routes.post('/appointment', async(req, res) => {
         res.statusCode = 500;
         return res.json({ "message": "error", "error": e });
     }
-    return res.json({ "message": "success" });
+    return res.json({
+        "message": "success",
+        id
+    });
 });
 
 routes.get('/calendar', (req, res) => {
