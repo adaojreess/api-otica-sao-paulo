@@ -13,7 +13,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(async function(doc) {
-            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Piripiri');
+            if (doc.data()['start']['seconds'] * 1000 < moment().subtract(1, 'days').valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Piripiri');
             else schedule.push(doc.data());
         });
         appointmentListPiripiri = schedule;
@@ -79,6 +79,20 @@ routes.post('/appointment', async(req, res) => {
         "message": "Visita salva",
         id
     });
+});
+
+routes.post('/admin/edited', async(req, res) => {
+    const data = req.body;
+    data.start = new Date(data.start)
+    console.log(data);
+    try {
+        await removeDocument(data.id.toString(), data.city);
+        await firebase.firestore().collection('cities').doc(data.city).collection('schedules').doc(data.id.toString()).set(data);
+        await spreadsheet.removeSchedule({ "city": data.city, "id": data.id });
+    } catch (e) {
+        return res.status(500).json({ message: "Error na operação", error: e });
+    }
+    return res.json({ message: "Dados atualizazdos" });
 });
 
 routes.get('/calendar', (req, res) => {
