@@ -12,7 +12,7 @@ firebase.firestore().collection('cities')
     .collection('schedules')
     .onSnapshot(querySnapshot => {
         var schedule = [];
-        querySnapshot.forEach(async function(doc) {
+        querySnapshot.forEach(async function (doc) {
             if (doc.data()['start']['seconds'] * 1000 < moment().subtract(1, 'days').valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Piripiri');
             else schedule.push(doc.data());
         });
@@ -24,14 +24,14 @@ firebase.firestore().collection('cities')
     .collection('schedules')
     .onSnapshot(querySnapshot => {
         var schedule = [];
-        querySnapshot.forEach(async function(doc) {
+        querySnapshot.forEach(async function (doc) {
             if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Pedro II');
             else schedule.push(doc.data());
         });
         appointmentListPedroII = schedule;
     });
 
-routes.post('/appointment', async(req, res) => {
+routes.post('/appointment', async (req, res) => {
     var data = req.body;
     var verify = true;
     let date = moment(data.start).utc();
@@ -69,8 +69,8 @@ routes.post('/appointment', async(req, res) => {
                 .doc(data.city)
                 .collection('schedules')
                 .doc(id.toString())
-                .set({...data, id: id });
-            await spreadsheet.addScheduleToSheet({...data, "id": id.toString() });
+                .set({ ...data, id: id });
+            await spreadsheet.addScheduleToSheet({ ...data, "id": id.toString() });
 
         } else {
             res.statusCode = 500;
@@ -86,7 +86,7 @@ routes.post('/appointment', async(req, res) => {
     });
 });
 
-routes.post('/admin/edited', async(req, res) => {
+routes.post('/admin/edited', async (req, res) => {
 
     const data = req.body;
     data.start = new Date(data.start)
@@ -123,7 +123,7 @@ routes.get('/calendar', (req, res) => {
             dateLocal.add(1, 'd');
         }
 
-        return res.json({ calendar: list, count: list.length});
+        return res.json({ calendar: list, count: list.length });
     } else {
         if (city === "Piripiri") {
             appointmentListPiripiri.filter(value => value.city === city).forEach(schedule => {
@@ -165,7 +165,7 @@ routes.get('/admin/appointments', (req, res) => {
     res.send(list);
 });
 
-routes.put('/admin/appointment', async(req, res) => {
+routes.put('/admin/appointment', async (req, res) => {
     let data = req.body;
     let id = Number(req.query.id);
 
@@ -173,15 +173,15 @@ routes.put('/admin/appointment', async(req, res) => {
         if (data.statement === 'blocked') {
             if (id.toString().length === 13)
                 await firebase.firestore()
-                .collection('cities')
-                .doc(data.city)
-                .collection('schedules')
-                .doc(id.toString())
-                .set({
-                    "start": moment.unix(id / 1000).toDate(),
-                    "id": id,
-                    ...data
-                });
+                    .collection('cities')
+                    .doc(data.city)
+                    .collection('schedules')
+                    .doc(id.toString())
+                    .set({
+                        "start": moment.unix(id / 1000).toDate(),
+                        "id": id,
+                        ...data
+                    });
         } else {
             console.log();
             data['id'] = id;
@@ -196,7 +196,7 @@ routes.put('/admin/appointment', async(req, res) => {
     res.json({ "message": "Dados atualizados" });
 });
 
-routes.delete('/admin/appointment', async(req, res) => {
+routes.delete('/admin/appointment', async (req, res) => {
     let id = req.query.id;
     let city = req.query.city;
 
@@ -222,7 +222,7 @@ routes.get('/search', (req, res) => {
     }
 });
 
-const removeDocument = async(docId, city) => {
+const removeDocument = async (docId, city) => {
     try {
         await firebase.firestore()
             .collection('cities')
@@ -264,12 +264,17 @@ const generateAppointmentsWithId = (city, date) => {
             if (data !== undefined) {
                 data.id = date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf();
                 appointments.push(data);
+            } else if (moment.now().valueOf() > date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf()) {
+                appointments.push({
+                    "id": date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf(),
+                    "statement": "blocked",
+                })
             } else appointments.push({
                 "id": date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf(),
                 "statement": "empty",
             });
         });
-    } catch (e) {}
+    } catch (e) { }
     return appointments;
 }
 
@@ -299,7 +304,7 @@ const searchByCpf = (cpf) => {
     appointmentFromPiripiri = appointmentListPiripiri.find(element => element.cpf === cpf);
     appointmentFromPedroII = appointmentListPedroII.find(element => element.cpf === cpf);
 
-    return {...appointmentFromPiripiri, ...appointmentFromPedroII };
+    return { ...appointmentFromPiripiri, ...appointmentFromPedroII };
 }
 
 const searchById = (id, list) => {
