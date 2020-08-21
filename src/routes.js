@@ -90,7 +90,7 @@ routes.post('/admin/edited', async(req, res) => {
 
     const data = req.body;
     data.start = new Date(data.start)
-    let previousCity = data.previousCity?? data.city;
+    let previousCity = data.previousCity === undefined ? data.previousCity : data.city;
 
     delete data['previousCity'];
 
