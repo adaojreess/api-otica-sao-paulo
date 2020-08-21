@@ -13,7 +13,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(async function(doc) {
-            if (doc.data()['start']['seconds'] * 1000 < moment().valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Piripiri');
+            if (doc.data()['start']['seconds'] * 1000 < moment().subtract(1, 'days').valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Piripiri');
             else schedule.push(doc.data());
         });
         appointmentListPiripiri = schedule;
@@ -107,24 +107,23 @@ routes.post('/admin/edited', async(req, res) => {
 routes.get('/calendar', (req, res) => {
     const city = req.query.city
     const date = req.query.date !== undefined ? moment(req.query.date).utc() : undefined;
+
     let list = [];
 
-    var dateLocal = moment().utc();
-
+    var dateLocal = moment().format();
 
     if (date === undefined) {
-        list = [];
 
-        var dateLocal = moment().utc();
+        var dateLocal = moment();
 
-        for (; list.length < 15;) {
+        for (; list.length < 16;) {
             if (dateLocal.day() !== 0 && isDayAvailable(dateLocal, city)) {
-                list.push(dateLocal.utc().format());
+                list.push(dateLocal.format());
             }
             dateLocal.add(1, 'd');
         }
 
-        res.json({ calendar: list });
+        return res.json({ calendar: list, count: list.length});
     } else {
         if (city === "Piripiri") {
             appointmentListPiripiri.filter(value => value.city === city).forEach(schedule => {
@@ -153,7 +152,7 @@ routes.get('/calendar', (req, res) => {
                 if (!list.includes(element)) newList.push(element);
             });
         }
-        res.json({ schedules: newList, count: newList.length });
+        return res.json({ schedules: newList, count: newList.length });
     }
 });
 
