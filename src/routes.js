@@ -13,7 +13,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(async function(doc) {
-            if (doc.data()['start']['seconds'] * 1000 < moment().subtract(1, 'days').valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Piripiri');
+            if (doc.data()['start']['seconds'] * 1000 < moment().valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Piripiri');
             else schedule.push(doc.data());
         });
         appointmentListPiripiri = schedule;
@@ -87,11 +87,15 @@ routes.post('/appointment', async(req, res) => {
 });
 
 routes.post('/admin/edited', async(req, res) => {
+
     const data = req.body;
     data.start = new Date(data.start)
-    console.log(data);
+    let previousCity = data.previousCity?? data.city;
+
+    delete data['previousCity'];
+
     try {
-        await removeDocument(data.id.toString(), data.city);
+        await removeDocument(data.id.toString(), previousCity);
         await firebase.firestore().collection('cities').doc(data.city).collection('schedules').doc(data.id.toString()).set(data);
         await spreadsheet.removeSchedule({ "city": data.city, "id": data.id });
     } catch (e) {
