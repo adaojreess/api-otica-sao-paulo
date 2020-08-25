@@ -110,17 +110,17 @@ routes.get('/calendar', (req, res) => {
 
     let list = [];
 
-    var dateLocal = moment().format();
+    var localDate = moment().format();
 
     if (date === undefined) {
 
-        var dateLocal = moment();
+        localDate = moment().hours(0).minute(0).second(0);
 
         for (; list.length < 16;) {
-            if (dateLocal.day() !== 0 && isDayAvailable(dateLocal, city)) {
-                list.push(dateLocal.format());
+            if (localDate.day() !== 0 && isDayAvailable(localDate, city)) {
+                list.push(localDate.format());
             }
-            dateLocal.add(1, 'd');
+            localDate.add(1, 'd');
         }
 
         return res.json({ calendar: list, count: list.length });
