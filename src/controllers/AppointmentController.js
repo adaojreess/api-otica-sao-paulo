@@ -3,6 +3,7 @@ const firebase = require('../firebase');
 const spreadsheet = require('../spreadsheet');
 
 const generateAppointmentsWithId = require('../utils/generateAppointmentsWithId');
+const removeDocument = require('../utils/removeDocument');
 
 let appointmentListPedroII = [];
 let appointmentListPiripiri = [];
@@ -86,5 +87,25 @@ module.exports = {
             return res.json({ "message": "Erro ao salvar dados", "error": e });
         }
         return res.json({ message: "Visita salva", id });
+    },
+    async edited(req, res) {
+        const data = req.body;
+        let newId = moment(data.start).valueOf();
+
+        data.start = new Date(data.start);
+        let previousCity = data.previousCity === undefined ? data.previousCity : data.city;
+    
+        delete data['previousCity'];
+    
+        try {
+            await removeDocument(data.id.toString(), previousCity);
+            spreadsheet.removeSchedule({ "city": data.city, "id": data.id });
+            data.id = newId;
+            await firebase.firestore().collection('cities').doc(data.city).collection('schedules').doc(newId.toString()).set(data);
+            spreadsheet.addScheduleToSheet(data);
+        } catch (e) {
+            return res.status(500).json({ message: "Error na operação", error: e });
+        }
+        return res.json({ message: "Dados atualizazdos" });
     }
 }

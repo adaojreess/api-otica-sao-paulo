@@ -32,30 +32,10 @@ firebase.firestore().collection('cities')
         });
         appointmentListPedroII = schedule;
     });
-
+    1598610600000
 routes.post('/appointment', AppointmentController.create);
 
-routes.post('/admin/edited', async (req, res) => {
-
-    const data = req.body;
-    let newId = moment(data.start).valueOf();
-    console.log(data.start)
-    data.start = new Date(data.start);
-    let previousCity = data.previousCity === undefined ? data.previousCity : data.city;
-
-    delete data['previousCity'];
-
-    try {
-        await removeDocument(data.id.toString(), previousCity);
-        spreadsheet.removeSchedule({ "city": data.city, "id": data.id });
-        data.id = newId;
-        await firebase.firestore().collection('cities').doc(data.city).collection('schedules').doc(newId.toString()).set(data);
-        spreadsheet.addScheduleToSheet(data);
-    } catch (e) {
-        return res.status(500).json({ message: "Error na operação", error: e });
-    }
-    return res.json({ message: "Dados atualizazdos" });
-});
+routes.post('/admin/edited', AppointmentController.edited);
 
 routes.get('/calendar', (req, res) => {
     const city = req.query.city
