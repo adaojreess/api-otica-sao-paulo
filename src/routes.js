@@ -33,60 +33,7 @@ firebase.firestore().collection('cities')
         appointmentListPedroII = schedule;
     });
 
-routes.post('/appointment', async (req, res) => {
-    var data = req.body;
-    var verify = true;
-    let date = moment(data.start).utc();
-    data.start = new Date(data.start);
-
-    let id;
-
-    var message = 'Horário indisponível';
-
-    try {
-        if (data.city === "Piripiri") {
-            appointmentListPiripiri.forEach(appointment => {
-                var start = moment.unix(appointment.start.seconds);
-                var checkDate = start.valueOf() === date.valueOf();
-                if ((appointment.cpf === data.cpf || checkDate) && verify) {
-                    verify = false;
-                    if (appointment.cpf === data.cpf) message = "CPF já cadastrado";
-                }
-            });
-        } else {
-            appointmentListPedroII.forEach(appointment => {
-                var start = moment.unix(appointment.start.seconds);
-                var checkDate = start.valueOf() === date.valueOf();
-                if ((appointment.statement === "blocked" || appointment.cpf === data.cpf || checkDate) && verify) {
-                    verify = false;
-                    if (appointment.cpf === data.cpf) message = "CPF já cadastrado";
-                }
-            });
-        }
-
-        if (verify) {
-            id = date.valueOf();
-            await firebase.firestore()
-                .collection('cities')
-                .doc(data.city)
-                .collection('schedules')
-                .doc(id.toString())
-                .set({ ...data, id: id });
-            await spreadsheet.addScheduleToSheet({ ...data, "id": id.toString() });
-
-        } else {
-            res.statusCode = 500;
-            return res.json({ message: message });
-        }
-    } catch (e) {
-        res.statusCode = 500;
-        return res.json({ "message": "Erro ao salvar dados", "error": e });
-    }
-    return res.json({
-        "message": "Visita salva",
-        id
-    });
-});
+routes.post('/appointment', AppointmentController.create);
 
 routes.post('/admin/edited', async (req, res) => {
 
