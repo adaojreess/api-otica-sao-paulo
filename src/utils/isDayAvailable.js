@@ -1,3 +1,5 @@
+const moment = require('moment');
+
 module.exports = isDayAvailable = (date, city, list) => {
     var count = 15;
     count = list.filter(element => {

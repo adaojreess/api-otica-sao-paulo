@@ -5,7 +5,10 @@ const spreadsheet = require('../spreadsheet');
 const generateAppointmentsWithId = require('../utils/generateAppointmentsWithId');
 const removeDocument = require('../utils/removeDocument');
 
-const listTimes = require('../utils/listTimes');
+const searchByCpf = require('../utils/searchByCpf');
+const searchById = require('../utils/searchById');
+const generateCalendar = require('../utils/generateCalendar');
+const generateSchedules = require('../utils/generateSchedules');
 
 let appointmentListPedroII = [];
 let appointmentListPiripiri = [];
@@ -17,7 +20,7 @@ firebase.firestore().collection('cities')
         var schedule = [];
 
         querySnapshot.forEach(doc => {
-            if (doc.data()['start']['seconds'] * 1000 < moment().subtract(1, 'days').valueOf() 
+            if (doc.data()['start']['seconds'] * 1000 < moment().subtract(1, 'days').valueOf()
                 || doc.data()['statement'] === 'empty') removeDocument(data.id.toString(), "Piripiri");
             else schedule.push(doc.data());
         });
@@ -156,57 +159,24 @@ module.exports = {
 
         res.json({ "message": "Dados deletados" });
     },
-
     calendar(req, res) {
         const city = req.query.city
         const date = req.query.date !== undefined ? moment(req.query.date).utc() : undefined;
 
-        let list = [];
-
-        var localDate = moment().format();
-
-        if (date === undefined) {
-
-            localDate = moment().hours(0).minute(0).second(0);
-
-            for (; list.length < 16;) {
-                if (localDate.day() !== 0 && isDayAvailable(localDate, city, city === "Piripiri" ? appointmentListPiripiri : appointmentListPedroII)) {
-                    list.push(localDate.format());
-                }
-                localDate.add(1, 'd');
-            }
-
-            return res.json({ calendar: list, count: list.length });
+        if (date === undefined)
+            return res.json(generateCalendar(city, city === "Piripiri" ? appointmentListPiripiri : appointmentListPedroII));
+        else {
+            return res.json(generateSchedules(city === "Piripiri" ? appointmentListPiripiri : appointmentListPedroII, date));
+        }
+    },
+    search(req, res) {
+        const cpf = req.query.cpf;
+        const city = req.query.city;
+        const id = req.query.id;
+        if (city !== undefined && id !== undefined) {
+            res.json({ data: searchById(Number(id), city === "Piripiri" ? appointmentListPiripiri : appointmentListPedroII) });
         } else {
-            if (city === "Piripiri") {
-                appointmentListPiripiri.forEach(schedule => {
-                    var start = moment.unix(schedule.start.seconds).utc();
-                    if (date.date() === start.date() && date.month() === start.month()) {
-                        list.push(start.hour().toString().padStart(2, '0') + ':' + start.minutes().toString().padStart(2, '0'));
-                    }
-                });
-            } else {
-                appointmentListPedroII.forEach(schedule => {
-                    var start = moment.unix(schedule.start.seconds).utc();
-                    if (date.date() === start.date() && date.month() === start.month()) {
-                        list.push(start.hour().toString().padStart(2, '0') + ':' + start.minutes().toString().padStart(2, '0'));
-                    }
-                });
-            }
-
-            var newList = [];
-
-            if (date.date() !== 6) {
-                listTimes.forEach(element => {
-                    let verify = date.hour(element.slice(0, 2)).minute(element.slice(3)).utc("-03:00").valueOf() > moment().subtract(2, "hours").utc("-03:00").valueOf();
-                    if (!list.includes(element) && verify) newList.push(element);
-                });
-            } else {
-                listTimes.slice(2, 10).forEach(element => {
-                    if (!list.includes(element)) newList.push(element);
-                });
-            }
-            return res.json({ schedules: newList, count: newList.length });
+            res.json({ data: searchByCpf(cpf, appointmentListPiripiri, appointmentListPedroII) });
         }
     }
 }
