@@ -130,14 +130,14 @@ routes.get('/calendar', (req, res) => {
         return res.json({ calendar: list, count: list.length });
     } else {
         if (city === "Piripiri") {
-            appointmentListPiripiri.filter(value => value.city === city).forEach(schedule => {
+            appointmentListPiripiri.forEach(schedule => {
                 var start = moment.unix(schedule.start.seconds).utc();
                 if (date.date() === start.date() && date.month() === start.month()) {
                     list.push(start.hour().toString().padStart(2, '0') + ':' + start.minutes().toString().padStart(2, '0'));
                 }
             });
         } else {
-            appointmentListPedroII.filter(value => value.city === city).map(schedule => {
+            appointmentListPedroII.forEach(schedule => {
                 var start = moment.unix(schedule.start.seconds).utc();
                 if (date.date() === start.date() && date.month() === start.month()) {
                     list.push(start.hour().toString().padStart(2, '0') + ':' + start.minutes().toString().padStart(2, '0'));
@@ -150,6 +150,7 @@ routes.get('/calendar', (req, res) => {
         if (date.date() !== 6) {
             listTimes.forEach(element => {
                 let verify = date.hour(element.slice(0, 2)).minute(element.slice(3)).utc("-03:00").valueOf() > moment().add('h', 1).utc("-03:00").valueOf();
+                console.log(verify);
                 if (!list.includes(element) && verify) newList.push(element);
             });
         } else {
