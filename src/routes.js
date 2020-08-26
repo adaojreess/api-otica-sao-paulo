@@ -13,7 +13,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(async function (doc) {
-            if (doc.data()['start']['seconds'] * 1000 < moment().subtract(1, 'days').valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Piripiri');
+            if (doc.data()['start']['seconds'] * 1000 < moment().subtract(12, 'hour').valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Piripiri');
             else schedule.push(doc.data());
         });
         appointmentListPiripiri = schedule;
@@ -25,7 +25,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(async function (doc) {
-            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Pedro II');
+            if (doc.data()['start']['seconds'] * 1000 <  moment().subtract(12, 'hour').valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Pedro II');
             else schedule.push(doc.data());
         });
         appointmentListPedroII = schedule;
@@ -89,15 +89,19 @@ routes.post('/appointment', async (req, res) => {
 routes.post('/admin/edited', async (req, res) => {
 
     const data = req.body;
-    data.start = new Date(data.start)
+    let newId = moment(data.start).valueOf();
+    console.log(data.start)
+    data.start = new Date(data.start);
     let previousCity = data.previousCity === undefined ? data.previousCity : data.city;
 
     delete data['previousCity'];
 
     try {
         await removeDocument(data.id.toString(), previousCity);
-        await firebase.firestore().collection('cities').doc(data.city).collection('schedules').doc(data.id.toString()).set(data);
-        await spreadsheet.removeSchedule({ "city": data.city, "id": data.id });
+        spreadsheet.removeSchedule({ "city": data.city, "id": data.id });
+        data.id = newId;
+        await firebase.firestore().collection('cities').doc(data.city).collection('schedules').doc(newId.toString()).set(data);
+        spreadsheet.addScheduleToSheet(data);
     } catch (e) {
         return res.status(500).json({ message: "Error na operação", error: e });
     }
@@ -184,7 +188,6 @@ routes.put('/admin/appointment', async (req, res) => {
                         ...data
                     });
         } else {
-            console.log();
             data['id'] = id;
             data['start'] = moment.unix(id / 1000).toDate();
             await firebase.firestore().collection('cities').doc(data.city).collection('schedules').doc(id.toString()).update(data);
@@ -194,7 +197,7 @@ routes.put('/admin/appointment', async (req, res) => {
         res.statusCode = 500;
         res.json({ "message": "Dados não atualizados", "error": e });
     }
-    res.json({ "message": "Dados atualizados" });
+    return res.json({ "message": "Dados atualizados" });
 });
 
 routes.delete('/admin/appointment', async (req, res) => {
