@@ -14,7 +14,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(async function (doc) {
-            if (doc.data()['start']['seconds'] * 1000 < moment().subtract(1, 'days').valueOf() || doc.data()['statement'] === 'empty') await console.log("Delete");
+            if (doc.data()['start']['seconds'] * 1000 < moment().subtract(1, 'days').valueOf() || doc.data()['statement'] === 'empty') await removeDocument(data.id.toString(), "Piripiri");
             else schedule.push(doc.data());
         });
         appointmentListPiripiri = schedule;
@@ -26,7 +26,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(async function (doc) {
-            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') await console.log("Delete");
+            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') await removeDocument(data.id.toString(), "Pedro II");
             else schedule.push(doc.data());
         });
         appointmentListPedroII = schedule;
@@ -39,8 +39,6 @@ module.exports = {
 
         const city = filters.city;
         const date = moment(filters.date).utc(true);
-
-        console.log(date);
 
         let list = generateAppointmentsWithId(city === "Piripiri" ? appointmentListPiripiri : appointmentListPedroII, date);
 
@@ -70,6 +68,7 @@ module.exports = {
 
             if (verify) {
                 id = date.valueOf();
+                data.start = date.toDate()
 
                 await firebase.firestore()
                     .collection('cities')
@@ -90,13 +89,14 @@ module.exports = {
     },
     async edited(req, res) {
         const data = req.body;
+
         let newId = moment(data.start).valueOf();
 
         data.start = new Date(data.start);
-        let previousCity = data.previousCity === undefined ? data.previousCity : data.city;
+        let previousCity = data.previousCity;
     
         delete data['previousCity'];
-    
+
         try {
             await removeDocument(data.id.toString(), previousCity);
             spreadsheet.removeSchedule({ "city": data.city, "id": data.id });

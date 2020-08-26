@@ -8,7 +8,6 @@ module.exports = generateAppointmentsWithId = (list, date) => {
         listTimes.forEach(time => {
             let verify = false;
             let id = date.hour(time.slice(0, 2)).minute(time.slice(3)).valueOf();
-            console.log(moment.unix(id/1000).format('lll'));
             let data;
 
             list.forEach(schedule => {
