@@ -149,7 +149,7 @@ routes.get('/calendar', (req, res) => {
 
         if (date.date() !== 6) {
             listTimes.forEach(element => {
-                let verify = date.hour(element.slice(0, 2)).minute(element.slice(3)).utc("-03:00").valueOf() > moment().subtract(3, "hours").utc("-03:00").valueOf();
+                let verify = date.hour(element.slice(0, 2)).minute(element.slice(3)).utc("-03:00").valueOf() > moment().subtract(2, "hours").utc("-03:00").valueOf();
                 console.log(verify);
                 if (!list.includes(element) && verify) newList.push(element);
             });
