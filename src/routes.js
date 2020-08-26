@@ -4,6 +4,8 @@ const routes = express.Router();
 const spreadsheet = require('./spreadsheet');
 const { listTimes } = require('./consts');
 const moment = require('moment');
+const AppointmentController = require('./controllers/AppointmentController');
+
 let appointmentListPiripiri = [];
 let appointmentListPedroII = [];
 
@@ -25,7 +27,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(async function (doc) {
-            if (doc.data()['start']['seconds'] * 1000 <  moment().subtract(12, 'hour').valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Pedro II');
+            if (doc.data()['start']['seconds'] * 1000 < moment().subtract(12, 'hour').valueOf() || doc.data()['statement'] === 'empty') await removeDocument(doc.id, 'Pedro II');
             else schedule.push(doc.data());
         });
         appointmentListPedroII = schedule;
@@ -162,14 +164,7 @@ routes.get('/calendar', (req, res) => {
     }
 });
 
-routes.get('/admin/appointments', (req, res) => {
-    const city = req.query.city;
-    const date = moment(req.query.date).utc();
-
-    let list = generateAppointmentsWithId(city, date);
-
-    res.send(list);
-});
+routes.get('/admin/appointments', AppointmentController.index);
 
 routes.put('/admin/appointment', async (req, res) => {
     let data = req.body;
