@@ -20,7 +20,7 @@ firebase.firestore().collection('cities')
 
         querySnapshot.forEach(doc => {
             if (doc.data()['start']['seconds'] * 1000 < moment().subtract(1, 'days').valueOf()
-                || doc.data()['statement'] === 'empty') removeDocument(doc.data().id.toString(), "Piripiri");
+            || doc.data()['statement'] === 'empty') removeDocument(doc.data().id.toString(), "Piripiri");
             else schedule.push(doc.data());
         });
         appointmentListPiripiri = schedule;
@@ -32,7 +32,7 @@ firebase.firestore().collection('cities')
     .onSnapshot(querySnapshot => {
         var schedule = [];
         querySnapshot.forEach(doc => {
-            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') removeDocument(data.id.toString(), "Pedro II");
+            if (doc.data()['start']['seconds'] * 1000 < moment.now().valueOf() || doc.data()['statement'] === 'empty') removeDocument(doc.data().id.toString(), "Pedro II");
             else schedule.push(doc.data());
         });
         appointmentListPedroII = schedule;
