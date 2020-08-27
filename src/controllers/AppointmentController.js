@@ -20,7 +20,7 @@ firebase.firestore().collection('cities')
 
         querySnapshot.forEach(doc => {
             if (doc.data()['start']['seconds'] * 1000 < moment().subtract(1, 'days').valueOf()
-                || doc.data()['statement'] === 'empty') removeDocument(data.id.toString(), "Piripiri");
+                || doc.data()['statement'] === 'empty') removeDocument(doc.data().id.toString(), "Piripiri");
             else schedule.push(doc.data());
         });
         appointmentListPiripiri = schedule;
